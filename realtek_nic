@@ -1,0 +1,40 @@
+https://www.sysadminstories.com/2018/08/adding-realtek-8111-driver-to-vsphere.html?m=1
+
+Download esxi 67 offline bundle
+https://my.vmware.com/group/vmware/downloads/details?downloadGroup=ESXI67U3B&productId=742
+
+Get Realtek NIC driver
+https://vibsdepot.v-front.de/wiki/index.php/Net55-r8168
+
+>Place them in to same folder
+
+Use Powershell to create custom ESXi image
+
+install powerCLI
+> Install-Module -Name VMware.PowerCLI -AllowClobber
+
+allow PS scripts
+> Set-ExecutionPolicy unrestricted
+
+
+> Add-EsxSoftwareDepot "<realtek_driver>", "<esxi_zip>"
+> Get-EsxImageProfile
+> New-EsxImageProfile -CloneProfile ESXi-6.7.0-XXXXX-standard -name ESXi-6.7.0-XXXXX-standard-RTL8111 -Vendor <your_name>
+> Set-EsxImageProfile -ImageProfile ESXi-6.7.0-XXXXX-standard-RTL8111 -AcceptanceLevel CommunitySupported
+> Get-EsxSoftwarePackage | Where {$_.Vendor -eq "Realtek"}
+> Add-EsxSoftwarePackage -ImageProfile ESXi-6.7.0-XXXXX-standard-RTL8111 -SoftwarePackage net55-r8168
+> Export-EsxImageProfile -ImageProfile ESXi-6.7.0-XXXXX-standard-RTL8111 -ExportToIso -filepath C:\x\x\VMware-ESXi-6.7.0-XXXXX-RTL8111.iso
+
+Restrict PS scripts
+> Set-ExecutionPolicy Restricted
+
+Use rufus to write the ISO on USB
+
+
+If need to restore from config
+# Allow SSH from VMware GUI.
+# Set to maintenance mode
+> vim-cmd hostsvc/maintenance_mode_enter
+# Rename config backup to configBundle.tgz and upload to esxi host
+# Restore the conifg
+> vim-cmd hostsvc/firmware/restore_config /tmp/configBundle.tgz
